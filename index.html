@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My AI Character World</title>
+    <!-- 픽셀 폰트 (둥근모꼴) 불러오기 -->
+    <link href="https://cdn.jsdelivr.net/gh/ungyeolee/Font-DungGeunMo/dunggeunmo.css" rel="stylesheet">
+    <!-- 아이콘 폰트 (Font Awesome) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        /* --- 기본 설정 --- */
+        :root {
+            --neon-yellow: #ffee00;
+            --neon-pink: #ff0099;
+            --neon-blue: #00f3ff;
+            --bg-dark: rgba(0, 0, 0, 0.7);
+            --card-bg: #111;
+            --window-border: #fff;
+            --window-header: #000080; /* 레트로 블루 */
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewport="0 0 24 24" fill="white" stroke="black"><polygon points="0,0 16,6 10,10 6,16"/></svg>'), auto; /* 커서 변경 */
+        }
+
+        body {
+            font-family: 'DungGeunMo', sans-serif;
+            color: white;
+            overflow-x: hidden;
+            background-color: #000;
+            transition: all 0.5s ease; /* 테마 전환 애니메이션 */
+        }
+
+        /* --- 배경 이미지 설정 --- */
+        #background-layer {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url('BG.png');
+            background-size: cover;
+            background-position: center;
+            z-index: -2;
+            transition: filter 1.5s ease;
+        }
+
+        .blurred {
+            filter: blur(8px) brightness(0.5);
+            transform: scale(1.02);
+        }
+
+        /* --- CRT 스캔라인 효과 (전체 화면 오버레이) --- */
+        #crt-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: linear-gradient(
+                to bottom,
+                rgba(255, 255, 255, 0),
+                rgba(255, 255, 255, 0) 50%,
+                rgba(0, 0, 0, 0.2) 50%,
+                rgba(0, 0, 0, 0.2)
+            );
+            background-size: 100% 4px;
+            z-index: 90;
+            pointer-events: none; /* 클릭 통과 */
+            opacity: 0.7;
+        }
+
+        /* --- 인트로 화면 --- */
+        #intro-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            transition: opacity 1s ease, visibility 1s;
+        }
+
+        .power-btn {
+            background: rgba(0,0,0,0.5);
+            border: 4px solid var(--neon-yellow);
+            color: var(--neon-yellow);
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            font-size: 3.5rem;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 0 15px var(--neon-yellow);
+            animation: breathe 3s infinite ease-in-out; /* 부드러운 숨쉬기 효과로 변경 */
+            transition: transform 0.2s, background 0.3s;
+        }
+
+        .power-btn:hover {
+            transform: scale(1.1);
+            background: rgba(255, 238, 0, 0.2);
+        }
+
+        @keyframes breathe {
+            0%, 100% { box-shadow: 0 0 10px var(--neon-yellow); opacity: 0.8; }
+            50% { box-shadow: 0 0 30px var(--neon-yellow); opacity: 1; }
+        }
+
+        .hidden {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+
+        /* --- 메인 컨텐츠 --- */
+        #main-content {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 50px 20px;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 1s ease 0.5s, transform 1s ease 0.5s;
+            display: none;
+            position: relative;
+            z-index: 1;
+        }
+
+        #main-content.visible {
+            opacity: 1;
+            transform: translateY(0);
+            display: block;
+        }
+
+        /* --- 타이포그래피 (깜빡임 완화) --- */
+        h1, h2 {
+            text-align: center;
+            text-shadow: 2px 2px 0px #000;
+        }
+
+        /* 네온 효과: 부드럽게 빛나도록 수정 (깜빡임 최소화) */
+        @keyframes steady-glow-blue {
+            0%, 100% { text-shadow: 0 0 5px var(--neon-blue), 0 0 10px var(--neon-blue); }
+            50% { text-shadow: 0 0 15px var(--neon-blue), 0 0 25px var(--neon-blue); }
+        }
+        
+        @keyframes steady-glow-pink {
+            0%, 100% { text-shadow: 0 0 5px var(--neon-pink), 0 0 10px var(--neon-pink); }
+            50% { text-shadow: 0 0 15px var(--neon-pink), 0 0 25px var(--neon-pink); }
+        }
+
+        h1 {
+            font-size: 3.5rem;
+            color: #fff;
+            margin-bottom: 60px;
+            display: block;
+            text-align: center;
+            animation: steady-glow-blue 3s infinite alternate; /* 깜빡임 대신 은은한 빛 */
+        }
+
+        /* --- 레트로 윈도우 스타일 (공통) --- */
+        .retro-window {
+            background: #c0c0c0; /* 고전 윈도우 회색 */
+            border: 2px solid #fff;
+            border-right-color: #404040;
+            border-bottom-color: #404040;
+            box-shadow: 2px 2px 10px rgba(0,0,0,0.5);
+            margin-bottom: 60px;
+            padding: 4px;
+            color: #000;
+        }
+
+        .window-header {
+            background: linear-gradient(90deg, #000080, #1084d0);
+            color: white;
+            padding: 5px 10px;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 4px;
+        }
+
+        .window-header .title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .window-buttons {
+            display: flex;
+            gap: 4px;
+        }
+
+        .win-btn {
+            width: 16px;
+            height: 16px;
+            background: #c0c0c0;
+            border: 1px solid #fff;
+            border-right-color: #404040;
+            border-bottom-color: #404040;
+            font-size: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        .window-body {
+            background: #000; /* 콘텐츠 배경은 어둡게 */
+            color: #fff;
+            padding: 20px;
+            border: 2px solid #404040;
+            border-right-color: #fff;
+            border-bottom-color: #fff;
+            position: relative;
+        }
+
+        /* --- 자기소개 섹션 --- */
+        .about-content {
+            display: flex;
+            align-items: center;
+            gap: 30px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .about-profile {
+            width: 120px;
+            height: 120px;
+            border: 2px solid var(--neon-blue);
+            box-shadow: 5px 5px 0px var(--neon-pink);
+        }
+
+        .about-text {
+            flex: 1;
+            min-width: 250px;
+            line-height: 1.6;
+            font-size: 1.1rem;
+            color: var(--neon-blue);
+        }
+
+        /* --- 캐릭터 섹션 --- */
+        .character-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .char-card {
+            position: relative;
+            height: 180px;
+            background-color: #222;
+            border: 2px solid #555;
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .char-card:hover {
+            border-color: var(--neon-yellow);
+            transform: translateY(-2px);
+            box-shadow: 0 0 15px var(--neon-yellow);
+        }
+        
+        /* 캐릭터 이미지 (GIF 지원 최적화) */
+        .char-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            /* 픽셀 아트 GIF가 깨지지 않고 선명하게 보이도록 설정 */
+            image-rendering: pixelated; 
+            image-rendering: -moz-crisp-edges;
+            image-rendering: crisp-edges;
+            transition: filter 0.3s;
+        }
+
+        /* 캐릭터 정보 오버레이 */
+        .char-info {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+            padding: 15px;
+            border: 2px solid var(--neon-yellow); /* 내부 테두리 */
+            margin: 5px; /* 테두리 간격 */
+            width: calc(100% - 10px);
+            height: calc(100% - 10px);
+        }
+
+        .char-card:hover .char-info {
+            opacity: 1;
+        }
+
+        .char-name {
+            font-size: 1.3rem;
+            color: var(--neon-yellow);
+            margin-bottom: 8px;
+            border-bottom: 2px dashed var(--neon-yellow);
+            padding-bottom: 5px;
+        }
+
+        .char-desc {
+            font-size: 0.9rem;
+            color: #fff;
+        }
+
+        /* --- 세계관 (물음표 -> 플로피 디스크) --- */
+        .worldview-section {
+            display: flex;
+            justify-content: center;
+            margin: 40px 0;
+        }
+
+        .floppy-disk {
+            font-size: 4rem;
+            color: var(--neon-pink);
+            cursor: pointer;
+            animation: bounce 2s infinite ease-in-out;
+            text-shadow: 3px 3px 0px #fff;
+            transition: transform 0.2s;
+        }
+
+        .floppy-disk:hover {
+            transform: scale(1.1) rotate(5deg);
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        /* --- 광고 섹션 (유튜브) --- */
+        .video-wrapper {
+            position: relative;
+            padding-bottom: 56.25%;
+            height: 0;
+            overflow: hidden;
+            border: 2px solid #333;
+        }
+
+        .video-wrapper iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        /* --- Contact 섹션 --- */
+        .contact-container {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            padding: 20px 0;
+        }
+
+        .retro-btn {
+            background: #c0c0c0;
+            border: 2px solid #fff;
+            border-right-color: #404040;
+            border-bottom-color: #404040;
+            padding: 10px 20px;
+            color: #000;
+            text-decoration: none;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.1rem;
+            transition: active 0.1s;
+        }
+
+        .retro-btn:active {
+            border: 2px solid #404040;
+            border-right-color: #fff;
+            border-bottom-color: #fff;
+            transform: translate(2px, 2px);
+        }
+
+        .retro-btn:hover {
+            background: #dcdcdc;
+        }
+
+        /* --- 모달 (시스템 경고창 스타일) --- */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 200;
+            display: none;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-window {
+            background: #c0c0c0;
+            border: 2px solid #fff;
+            border-right-color: #404040;
+            border-bottom-color: #404040;
+            width: 90%;
+            max-width: 500px;
+            padding: 3px;
+            box-shadow: 10px 10px 0px rgba(0,0,0,0.5);
+        }
+
+        .modal-header {
+            background: #000080;
+            color: white;
+            padding: 5px;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .modal-body {
+            padding: 20px;
+            text-align: center;
+            color: #000;
+        }
+
+        .modal-text {
+            font-size: 1.1rem;
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+
+        .modal-close-btn {
+            background: #c0c0c0;
+            border: 2px solid #fff;
+            border-right-color: #404040;
+            border-bottom-color: #404040;
+            padding: 5px 20px;
+            cursor: pointer;
+            font-family: inherit;
+            font-weight: bold;
+        }
+        
+        .modal-close-btn:active {
+            border: 2px solid #404040;
+            border-right-color: #fff;
+            border-bottom-color: #fff;
+        }
+
+        /* 반응형 */
+        @media (max-width: 768px) {
+            h1 { font-size: 2.5rem; }
+            .character-grid { grid-template-columns: 1fr; }
+            .contact-container { flex-direction: column; align-items: stretch; }
+            .retro-btn { justify-content: center; }
+        }
+
+    </style>
+</head>
+<body>
+
+    <!-- 1. 배경 및 효과 레이어 -->
+    <div id="background-layer"></div>
+    <div id="crt-overlay"></div> <!-- 스캔라인 효과 추가 -->
+
+    <!-- 2. 인트로 화면 -->
+    <div id="intro-screen">
+        <div style="text-align: center;">
+            <button class="power-btn" onclick="enterSite()">
+                <i class="fas fa-power-off"></i>
+            </button>
+            <p style="margin-top: 20px; color: var(--neon-yellow); font-size: 1.2rem; animation: breathe 2s infinite;">SYSTEM START</p>
+        </div>
+    </div>
+
+    <!-- 3. 메인 콘텐츠 -->
+    <div id="main-content">
+        <h1>NEO PORTFOLIO</h1>
+
+        <!-- 윈도우 스타일: 자기소개 -->
+        <div class="retro-window" id="about">
+            <div class="window-header">
+                <div class="title"><i class="fas fa-user-circle"></i> USER_PROFILE.EXE</div>
+                <div class="window-buttons">
+                    <div class="win-btn">_</div>
+                    <div class="win-btn">□</div>
+                    <div class="win-btn">X</div>
+                </div>
+            </div>
+            <div class="window-body">
+                <div class="about-content">
+                    <img src="https://placehold.co/150x150/ff0099/FFF?text=ME" alt="Profile Picture" class="about-profile">
+                    <div class="about-text">
+                        <p>> 접속자: UNKNOWN_USER<br>
+                        > 직업: Digital Creator<br>
+                        -------------------------<br>
+                        안녕하세요. 이곳은 픽셀과 데이터로 이루어진 저만의 가상 공간입니다. AI 기술을 활용해 새로운 사이버펑크 세계를 구축하고 있습니다.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 윈도우 스타일: 캐릭터 -->
+        <div class="retro-window" id="characters">
+            <div class="window-header">
+                <div class="title"><i class="fas fa-users"></i> CHAR_DATABASE.DB</div>
+                <div class="window-buttons">
+                    <div class="win-btn">X</div>
+                </div>
+            </div>
+            <div class="window-body">
+                <div class="character-grid">
+                    <!-- 캐릭터 1 -->
+                    <div class="char-card">
+                        <!-- 
+                           [사용 팁] 여기에 .gif 파일을 넣으세요! 
+                           예: src="neon_hunter.gif" 
+                        -->
+                        <img src="https://placehold.co/400x250/220033/FFF?text=Hunter.gif" alt="Character 1" class="char-img">
+                        <div class="char-info">
+                            <div class="char-name">네온 헌터</div>
+                            <div class="char-desc">"어둠 속 데이터는 내 것이다."<br>도시의 그림자 무사.</div>
+                        </div>
+                    </div>
+                    <!-- 캐릭터 2 -->
+                    <div class="char-card">
+                        <img src="https://placehold.co/400x250/002233/FFF?text=Doctor.gif" alt="Character 2" class="char-img">
+                        <div class="char-info">
+                            <div class="char-name">닥터 픽셀</div>
+                            <div class="char-desc">"고칠 수 없는 버그는 없어."<br>천재 메카닉.</div>
+                        </div>
+                    </div>
+                    <!-- 캐릭터 3 -->
+                    <div class="char-card">
+                        <img src="https://placehold.co/400x250/331100/FFF?text=Robot.gif" alt="Character 3" class="char-img">
+                        <div class="char-info">
+                            <div class="char-name">V-3000</div>
+                            <div class="char-desc">"감정... 로딩 중..."<br>구형 AI 로봇.</div>
+                        </div>
+                    </div>
+                    <!-- 캐릭터 4 -->
+                    <div class="char-card">
+                        <img src="https://placehold.co/400x250/003300/FFF?text=Cat.gif" alt="Character 4" class="char-img">
+                        <div class="char-info">
+                            <div class="char-name">사이버 캣</div>
+                            <div class="char-desc">"Meow_System_Hacked"<br>해커 고양이.</div>
+                        </div>
+                    </div>
+                    <!-- 캐릭터 5 -->
+                    <div class="char-card">
+                        <img src="https://placehold.co/400x250/333333/FFF?text=Phantom.gif" alt="Character 5" class="char-img">
+                        <div class="char-info">
+                            <div class="char-name">팬텀</div>
+                            <div class="char-desc">"당신의 기억을 삽니다."<br>정보상.</div>
+                        </div>
+                    </div>
+                    
+                    <!-- [이스터에그] 숨겨진 6번째 캐릭터 (초기 상태: display:none) -->
+                    <div class="char-card" id="hidden-char" style="display: none;">
+                        <img src="https://placehold.co/400x250/550000/FFF?text=HIDDEN+No.6" alt="Hidden Character" class="char-img">
+                        <div class="char-info">
+                            <div class="char-name" style="color:red;">프로젝트 X</div>
+                            <div class="char-desc">"당신이 나를 찾았군..."<br>봉인된 금단의 AI.</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 윈도우 스타일: 세계관 -->
+        <div class="retro-window" id="worldview">
+             <div class="window-header">
+                <div class="title"><i class="fas fa-globe"></i> WORLD_INFO.TXT</div>
+                <div class="window-buttons">
+                    <div class="win-btn">?</div>
+                </div>
+            </div>
+            <div class="window-body" style="text-align: center;">
+                <p style="margin-bottom: 20px; color: #aaa;">Click the disk to load data...</p>
+                <div class="worldview-section">
+                    <div class="floppy-disk" onclick="openModal()">
+                        <i class="fas fa-save"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 윈도우 스타일: 광고 -->
+        <div class="retro-window" id="ads">
+            <div class="window-header">
+                <div class="title"><i class="fas fa-tv"></i> AD_PLAYER.EXE</div>
+                <div class="window-buttons">
+                    <div class="win-btn">X</div>
+                </div>
+            </div>
+            <div class="window-body">
+                <div class="video-wrapper">
+                    <iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ" title="YouTube video player" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                </div>
+                <p style="text-align: center; color: var(--neon-yellow); margin-top: 10px; font-size: 0.8rem;">[SYSTEM] Playing sponsored content...</p>
+            </div>
+        </div>
+
+        <!-- 윈도우 스타일: 컨택트 -->
+        <div class="retro-window" id="contact">
+            <div class="window-header">
+                <div class="title"><i class="fas fa-address-book"></i> CONTACT_US</div>
+            </div>
+            <div class="window-body" style="background: #ccc; color: black;"> <!-- 여긴 밝은 배경 -->
+                <div class="contact-container">
+                    <a href="https://instagram.com" target="_blank" class="retro-btn">
+                        <i class="fab fa-instagram"></i> Instagram
+                    </a>
+                    <a href="mailto:email@example.com" class="retro-btn">
+                        <i class="fas fa-envelope"></i> Send Email
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 레트로 스타일 모달 -->
+    <div id="lore-modal" class="modal-overlay">
+        <div class="modal-window">
+            <div class="modal-header">
+                <span id="modal-title">SYSTEM MESSAGE</span>
+                <span style="cursor:pointer;" onclick="closeModal()">X</span>
+            </div>
+            <div class="modal-body">
+                <div id="modal-icon" style="font-size: 3rem; color: #000080; margin-bottom: 10px;">
+                    <i class="fas fa-info-circle"></i>
+                </div>
+                <h3 id="modal-header-text" style="margin-bottom: 15px;">[ NEO SEOUL : 2077 ]</h3>
+                <p id="modal-content-text" class="modal-text">
+                    인류가 디지털 세상으로 완전히 이주한 시대.<br>
+                    현실과 가상의 경계가 무너진 거대한 사이버펑크 도시입니다.<br>
+                    이곳의 모든 데이터는 살아 숨쉬고 있습니다.
+                </p>
+                <button class="modal-close-btn" onclick="closeModal()">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function enterSite() {
+            const intro = document.getElementById('intro-screen');
+            const main = document.getElementById('main-content');
+            const bg = document.getElementById('background-layer');
+
+            intro.classList.add('hidden');
+            bg.classList.add('blurred');
+
+            setTimeout(() => {
+                main.classList.add('visible');
+                intro.style.display = 'none';
+            }, 800);
+        }
+
+        // 모달 관련 함수 수정 (이스터에그 메시지 표시용)
+        function openModal(type = 'default') {
+            const modal = document.getElementById('lore-modal');
+            const title = document.getElementById('modal-title');
+            const icon = document.getElementById('modal-icon');
+            const header = document.getElementById('modal-header-text');
+            const content = document.getElementById('modal-content-text');
+
+            if (type === 'found') {
+                title.innerText = 'NEW DATA FOUND';
+                icon.innerHTML = '<i class="fas fa-exclamation-triangle"></i>';
+                icon.style.color = 'red';
+                header.innerText = '[ HIDDEN FILE UNLOCKED ]';
+                header.style.color = 'red';
+                content.innerHTML = '숫자 6번의 비밀 코드가 입력되었습니다.<br>숨겨진 6번째 캐릭터 데이터가 복구되었습니다.';
+            } else {
+                // 기본 세계관 내용 복구
+                title.innerText = 'SYSTEM MESSAGE';
+                icon.innerHTML = '<i class="fas fa-info-circle"></i>';
+                icon.style.color = '#000080';
+                header.innerText = '[ NEO SEOUL : 2077 ]';
+                header.style.color = 'white';
+                content.innerHTML = '인류가 디지털 세상으로 완전히 이주한 시대.<br>현실과 가상의 경계가 무너진 거대한 사이버펑크 도시입니다.<br>이곳의 모든 데이터는 살아 숨쉬고 있습니다.';
+            }
+
+            modal.style.display = 'flex';
+        }
+
+        function closeModal() {
+            document.getElementById('lore-modal').style.display = 'none';
+        }
+
+        window.onclick = function(event) {
+            const modal = document.getElementById('lore-modal');
+            if (event.target == modal) {
+                modal.style.display = 'none';
+            }
+        }
+
+        // --- 이스터에그: 숫자 '6' 5번 연속 입력 로직 ---
+        let pressCount = 0;
+
+        document.addEventListener('keydown', (e) => {
+            // 숫자키 6 또는 텐키패드 6
+            if (e.key === '6') {
+                pressCount++;
+                if (pressCount >= 5) {
+                    const hiddenChar = document.getElementById('hidden-char');
+                    // 아직 안 보여줬다면 보여주기
+                    if (hiddenChar.style.display === 'none') {
+                        hiddenChar.style.display = 'block'; // 캐릭터 표시
+                        openModal('found'); // 알림창 띄우기
+                    }
+                    // 이미 보여줬다면 카운트만 유지하거나 리셋하지 않음 (중복 실행 방지)
+                }
+            } else {
+                // 다른 키를 누르면 카운트 초기화 (연속 입력 조건)
+                pressCount = 0; 
+            }
+        });
+    </script>
+</body>
+</html>
