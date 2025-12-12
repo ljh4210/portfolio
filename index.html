@@ -21,19 +21,32 @@
             --window-header: #000080; /* 레트로 블루 */
         }
 
+        /* [핵심 수정] 스크롤 스냅 최적화 */
+        html, body {
+            height: 100%;
+            margin: 0;
+            overflow: hidden; /* body 자체 스크롤 막고 main-container로 제어 */
+        }
+
+        /* 실제 스크롤이 일어나는 컨테이너 */
+        .snap-container {
+            height: 100%;
+            overflow-y: scroll; /* 세로 스크롤 허용 */
+            scroll-snap-type: y mandatory; /* 세로 방향 강제 스냅 */
+            /* scroll-behavior: smooth;  <-- 제거함 (스냅과 충돌하여 끊김 유발) */
+        }
+
         * {
             box-sizing: border-box;
-            margin: 0;
             padding: 0;
-            cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewport="0 0 24 24" fill="white" stroke="black"><polygon points="0,0 16,6 10,10 6,16"/></svg>'), auto; /* 커서 변경 */
+            cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewport="0 0 24 24" fill="white" stroke="black"><polygon points="0,0 16,6 10,10 6,16"/></svg>'), auto;
         }
 
         body {
             font-family: 'DungGeunMo', sans-serif;
             color: white;
-            overflow-x: hidden;
             background-color: #000;
-            transition: all 0.5s ease; /* 테마 전환 애니메이션 */
+            transition: all 0.5s ease;
         }
 
         /* --- 배경 이미지 설정 --- */
@@ -55,7 +68,7 @@
             transform: scale(1.02);
         }
 
-        /* --- CRT 스캔라인 효과 (전체 화면 오버레이) --- */
+        /* --- CRT 스캔라인 효과 --- */
         #crt-overlay {
             position: fixed;
             top: 0;
@@ -71,8 +84,22 @@
             );
             background-size: 100% 4px;
             z-index: 90;
-            pointer-events: none; /* 클릭 통과 */
+            pointer-events: none;
             opacity: 0.7;
+        }
+
+        /* --- 스냅 섹션 (Chapter) --- */
+        .chapter {
+            height: 100vh; /* 화면 꽉 차게 고정 */
+            width: 100%;
+            scroll-snap-align: start; /* 시작점에 정확히 스냅 */
+            scroll-snap-stop: always; /* [중요] 스크롤 가속 시 건너뛰기 방지 */
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            position: relative;
         }
 
         /* --- 인트로 화면 --- */
@@ -86,7 +113,14 @@
             justify-content: center;
             align-items: center;
             z-index: 100;
+            background: #000;
             transition: opacity 1s ease, visibility 1s;
+        }
+        
+        #intro-screen.hidden {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
         }
 
         .power-btn {
@@ -102,7 +136,7 @@
             justify-content: center;
             align-items: center;
             box-shadow: 0 0 15px var(--neon-yellow);
-            animation: breathe 3s infinite ease-in-out; /* 부드러운 숨쉬기 효과로 변경 */
+            animation: breathe 3s infinite ease-in-out;
             transition: transform 0.2s, background 0.3s;
         }
 
@@ -116,23 +150,15 @@
             50% { box-shadow: 0 0 30px var(--neon-yellow); opacity: 1; }
         }
 
-        .hidden {
-            opacity: 0;
-            visibility: hidden;
-            pointer-events: none;
-        }
-
-        /* --- 메인 컨텐츠 --- */
+        /* --- 메인 컨텐츠 래퍼 --- */
         #main-content {
+            width: 100%;
             max-width: 1000px;
             margin: 0 auto;
-            padding: 50px 20px;
             opacity: 0;
             transform: translateY(20px);
             transition: opacity 1s ease 0.5s, transform 1s ease 0.5s;
             display: none;
-            position: relative;
-            z-index: 1;
         }
 
         #main-content.visible {
@@ -141,40 +167,34 @@
             display: block;
         }
 
-        /* --- 타이포그래피 (깜빡임 완화) --- */
+        /* 타이틀 섹션 */
+        .title-chapter h1 {
+            font-size: 3.5rem;
+            color: #fff;
+            margin-bottom: 20px;
+            text-align: center;
+            animation: steady-glow-blue 3s infinite alternate;
+        }
+
         h1, h2 {
             text-align: center;
             text-shadow: 2px 2px 0px #000;
         }
 
-        /* 네온 효과: 부드럽게 빛나도록 수정 (깜빡임 최소화) */
         @keyframes steady-glow-blue {
             0%, 100% { text-shadow: 0 0 5px var(--neon-blue), 0 0 10px var(--neon-blue); }
             50% { text-shadow: 0 0 15px var(--neon-blue), 0 0 25px var(--neon-blue); }
         }
-        
-        @keyframes steady-glow-pink {
-            0%, 100% { text-shadow: 0 0 5px var(--neon-pink), 0 0 10px var(--neon-pink); }
-            50% { text-shadow: 0 0 15px var(--neon-pink), 0 0 25px var(--neon-pink); }
-        }
 
-        h1 {
-            font-size: 3.5rem;
-            color: #fff;
-            margin-bottom: 60px;
-            display: block;
-            text-align: center;
-            animation: steady-glow-blue 3s infinite alternate; /* 깜빡임 대신 은은한 빛 */
-        }
-
-        /* --- 레트로 윈도우 스타일 (공통) --- */
+        /* --- 레트로 윈도우 스타일 --- */
         .retro-window {
-            background: #c0c0c0; /* 고전 윈도우 회색 */
+            background: #c0c0c0;
             border: 2px solid #fff;
             border-right-color: #404040;
             border-bottom-color: #404040;
-            box-shadow: 2px 2px 10px rgba(0,0,0,0.5);
-            margin-bottom: 60px;
+            box-shadow: 10px 10px 20px rgba(0,0,0,0.5);
+            width: 100%;
+            max-width: 800px;
             padding: 4px;
             color: #000;
         }
@@ -216,7 +236,7 @@
         }
 
         .window-body {
-            background: #000; /* 콘텐츠 배경은 어둡게 */
+            background: #000;
             color: #fff;
             padding: 20px;
             border: 2px solid #404040;
@@ -252,13 +272,13 @@
         /* --- 캐릭터 섹션 --- */
         .character-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 20px;
+            grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); /* 카드가 조금 더 작게 보이도록 조정 */
+            gap: 15px;
         }
 
         .char-card {
             position: relative;
-            height: 180px;
+            height: 160px;
             background-color: #222;
             border: 2px solid #555;
             overflow: hidden;
@@ -268,66 +288,28 @@
 
         .char-card:hover {
             border-color: var(--neon-yellow);
-            transform: translateY(-2px);
-            box-shadow: 0 0 15px var(--neon-yellow);
+            transform: translateY(-5px) scale(1.02);
+            box-shadow: 0 0 20px var(--neon-yellow);
+            z-index: 10;
         }
         
-        /* 캐릭터 이미지 (GIF 지원 최적화) */
         .char-img {
             width: 100%;
             height: 100%;
             object-fit: cover;
-            /* 픽셀 아트 GIF가 깨지지 않고 선명하게 보이도록 설정 */
             image-rendering: pixelated; 
-            image-rendering: -moz-crisp-edges;
-            image-rendering: crisp-edges;
             transition: filter 0.3s;
         }
 
-        /* 캐릭터 정보 오버레이 */
-        .char-info {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.9);
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            text-align: center;
-            opacity: 0;
-            transition: opacity 0.2s ease;
-            padding: 15px;
-            border: 2px solid var(--neon-yellow); /* 내부 테두리 */
-            margin: 5px; /* 테두리 간격 */
-            width: calc(100% - 10px);
-            height: calc(100% - 10px);
+        .char-data-hidden {
+            display: none; 
         }
 
-        .char-card:hover .char-info {
-            opacity: 1;
-        }
-
-        .char-name {
-            font-size: 1.3rem;
-            color: var(--neon-yellow);
-            margin-bottom: 8px;
-            border-bottom: 2px dashed var(--neon-yellow);
-            padding-bottom: 5px;
-        }
-
-        .char-desc {
-            font-size: 0.9rem;
-            color: #fff;
-        }
-
-        /* --- 세계관 (물음표 -> 플로피 디스크) --- */
+        /* --- 세계관 --- */
         .worldview-section {
             display: flex;
             justify-content: center;
-            margin: 40px 0;
+            margin: 20px 0;
         }
 
         .floppy-disk {
@@ -348,7 +330,7 @@
             50% { transform: translateY(-10px); }
         }
 
-        /* --- 광고 섹션 (유튜브) --- */
+        /* --- 광고 섹션 --- */
         .video-wrapper {
             position: relative;
             padding-bottom: 56.25%;
@@ -366,7 +348,7 @@
             border: none;
         }
 
-        /* --- Contact 섹션 --- */
+        /* --- Contact --- */
         .contact-container {
             display: flex;
             justify-content: center;
@@ -401,7 +383,7 @@
             background: #dcdcdc;
         }
 
-        /* --- 모달 (시스템 경고창 스타일) --- */
+        /* --- 모달 (공통 스타일) --- */
         .modal-overlay {
             position: fixed;
             top: 0;
@@ -413,6 +395,7 @@
             display: none;
             justify-content: center;
             align-items: center;
+            backdrop-filter: blur(3px);
         }
 
         .modal-window {
@@ -423,7 +406,13 @@
             width: 90%;
             max-width: 500px;
             padding: 3px;
-            box-shadow: 10px 10px 0px rgba(0,0,0,0.5);
+            box-shadow: 10px 10px 30px rgba(0,0,0,0.8);
+            animation: popIn 0.3s ease;
+        }
+
+        @keyframes popIn {
+            from { transform: scale(0.8); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
         }
 
         .modal-header {
@@ -439,12 +428,8 @@
             padding: 20px;
             text-align: center;
             color: #000;
-        }
-
-        .modal-text {
-            font-size: 1.1rem;
-            margin-bottom: 20px;
-            line-height: 1.5;
+            max-height: 70vh;
+            overflow-y: auto;
         }
 
         .modal-close-btn {
@@ -464,12 +449,35 @@
             border-bottom-color: #fff;
         }
 
+        /* 캐릭터 상세 모달 전용 스타일 */
+        #char-modal-img {
+            width: 100%;
+            max-width: 300px;
+            border: 2px solid #000;
+            margin-bottom: 15px;
+            image-rendering: pixelated;
+        }
+        
+        #char-modal-name {
+            font-size: 1.5rem;
+            color: #000080;
+            margin-bottom: 10px;
+            text-decoration: underline;
+        }
+
+        #char-modal-desc {
+            font-size: 1.1rem;
+            line-height: 1.5;
+        }
+
         /* 반응형 */
         @media (max-width: 768px) {
             h1 { font-size: 2.5rem; }
             .character-grid { grid-template-columns: 1fr; }
             .contact-container { flex-direction: column; align-items: stretch; }
             .retro-btn { justify-content: center; }
+            /* 모바일에서 내용이 넘칠 경우 스냅 높이 조정 */
+            .chapter { height: auto; min-height: 100vh; padding: 40px 20px; }
         }
 
     </style>
@@ -478,7 +486,7 @@
 
     <!-- 1. 배경 및 효과 레이어 -->
     <div id="background-layer"></div>
-    <div id="crt-overlay"></div> <!-- 스캔라인 효과 추가 -->
+    <div id="crt-overlay"></div>
 
     <!-- 2. 인트로 화면 -->
     <div id="intro-screen">
@@ -490,158 +498,178 @@
         </div>
     </div>
 
-    <!-- 3. 메인 콘텐츠 -->
-    <div id="main-content">
-        <h1>NEO PORTFOLIO</h1>
+    <!-- 3. 메인 콘텐츠 (여기에 스냅 컨테이너 적용) -->
+    <!-- body 스크롤을 막고 이 div 내부에서 스크롤하게 함 -->
+    <div class="snap-container" id="main-content-wrapper">
+        <div id="main-content">
+            
+            <!-- 타이틀 섹션 -->
+            <section class="chapter title-chapter">
+                <h1>NEO PORTFOLIO</h1>
+                <p style="text-align: center; color: #aaa; margin-top: -40px; margin-bottom: 40px;">Scroll Down to Access Data</p>
+                <i class="fas fa-chevron-down" style="color:white; font-size: 2rem; animation: bounce 1.5s infinite;"></i>
+            </section>
 
-        <!-- 윈도우 스타일: 자기소개 -->
-        <div class="retro-window" id="about">
-            <div class="window-header">
-                <div class="title"><i class="fas fa-user-circle"></i> USER_PROFILE.EXE</div>
-                <div class="window-buttons">
-                    <div class="win-btn">_</div>
-                    <div class="win-btn">□</div>
-                    <div class="win-btn">X</div>
-                </div>
-            </div>
-            <div class="window-body">
-                <div class="about-content">
-                    <img src="https://placehold.co/150x150/ff0099/FFF?text=ME" alt="Profile Picture" class="about-profile">
-                    <div class="about-text">
-                        <p>> 접속자: UNKNOWN_USER<br>
-                        > 직업: Digital Creator<br>
-                        -------------------------<br>
-                        안녕하세요. 이곳은 픽셀과 데이터로 이루어진 저만의 가상 공간입니다. AI 기술을 활용해 새로운 사이버펑크 세계를 구축하고 있습니다.</p>
+            <!-- 윈도우 스타일: 자기소개 -->
+            <section class="chapter">
+                <div class="retro-window" id="about">
+                    <div class="window-header">
+                        <div class="title"><i class="fas fa-user-circle"></i> USER_PROFILE.EXE</div>
+                        <div class="window-buttons">
+                            <div class="win-btn">_</div>
+                            <div class="win-btn">□</div>
+                            <div class="win-btn">X</div>
+                        </div>
+                    </div>
+                    <div class="window-body">
+                        <div class="about-content">
+                            <img src="https://placehold.co/150x150/ff0099/FFF?text=ME" alt="Profile Picture" class="about-profile">
+                            <div class="about-text">
+                                <p>> 접속자: UNKNOWN_USER<br>
+                                > 직업: Digital Creator<br>
+                                -------------------------<br>
+                                안녕하세요. 이곳은 픽셀과 데이터로 이루어진 저만의 가상 공간입니다. AI 기술을 활용해 새로운 사이버펑크 세계를 구축하고 있습니다.</p>
+                            </div>
+                        </div>
                     </div>
                 </div>
-            </div>
-        </div>
+            </section>
 
-        <!-- 윈도우 스타일: 캐릭터 -->
-        <div class="retro-window" id="characters">
-            <div class="window-header">
-                <div class="title"><i class="fas fa-users"></i> CHAR_DATABASE.DB</div>
-                <div class="window-buttons">
-                    <div class="win-btn">X</div>
-                </div>
-            </div>
-            <div class="window-body">
-                <div class="character-grid">
-                    <!-- 캐릭터 1 -->
-                    <div class="char-card">
-                        <!-- 
-                           [사용 팁] 여기에 .gif 파일을 넣으세요! 
-                           예: src="neon_hunter.gif" 
-                        -->
-                        <img src="https://placehold.co/400x250/220033/FFF?text=Hunter.gif" alt="Character 1" class="char-img">
-                        <div class="char-info">
-                            <div class="char-name">네온 헌터</div>
-                            <div class="char-desc">"어둠 속 데이터는 내 것이다."<br>도시의 그림자 무사.</div>
+            <!-- 윈도우 스타일: 캐릭터 -->
+            <section class="chapter">
+                <div class="retro-window" id="characters">
+                    <div class="window-header">
+                        <div class="title"><i class="fas fa-users"></i> CHAR_DATABASE.DB</div>
+                        <div class="window-buttons">
+                            <div class="win-btn">X</div>
                         </div>
                     </div>
-                    <!-- 캐릭터 2 -->
-                    <div class="char-card">
-                        <img src="https://placehold.co/400x250/002233/FFF?text=Doctor.gif" alt="Character 2" class="char-img">
-                        <div class="char-info">
-                            <div class="char-name">닥터 픽셀</div>
-                            <div class="char-desc">"고칠 수 없는 버그는 없어."<br>천재 메카닉.</div>
-                        </div>
-                    </div>
-                    <!-- 캐릭터 3 -->
-                    <div class="char-card">
-                        <img src="https://placehold.co/400x250/331100/FFF?text=Robot.gif" alt="Character 3" class="char-img">
-                        <div class="char-info">
-                            <div class="char-name">V-3000</div>
-                            <div class="char-desc">"감정... 로딩 중..."<br>구형 AI 로봇.</div>
-                        </div>
-                    </div>
-                    <!-- 캐릭터 4 -->
-                    <div class="char-card">
-                        <img src="https://placehold.co/400x250/003300/FFF?text=Cat.gif" alt="Character 4" class="char-img">
-                        <div class="char-info">
-                            <div class="char-name">사이버 캣</div>
-                            <div class="char-desc">"Meow_System_Hacked"<br>해커 고양이.</div>
-                        </div>
-                    </div>
-                    <!-- 캐릭터 5 -->
-                    <div class="char-card">
-                        <img src="https://placehold.co/400x250/333333/FFF?text=Phantom.gif" alt="Character 5" class="char-img">
-                        <div class="char-info">
-                            <div class="char-name">팬텀</div>
-                            <div class="char-desc">"당신의 기억을 삽니다."<br>정보상.</div>
-                        </div>
-                    </div>
-                    
-                    <!-- [이스터에그] 숨겨진 6번째 캐릭터 (초기 상태: display:none) -->
-                    <div class="char-card" id="hidden-char" style="display: none;">
-                        <img src="https://placehold.co/400x250/550000/FFF?text=HIDDEN+No.6" alt="Hidden Character" class="char-img">
-                        <div class="char-info">
-                            <div class="char-name" style="color:red;">프로젝트 X</div>
-                            <div class="char-desc">"당신이 나를 찾았군..."<br>봉인된 금단의 AI.</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+                    <div class="window-body">
+                        <div class="character-grid">
+                            
+                            <!-- 캐릭터 1 -->
+                            <div class="char-card" onclick="showCharDetails(this)">
+                                <img src="https://placehold.co/400x250/220033/FFF?text=Hunter.gif" alt="Character 1" class="char-img">
+                                <div class="char-data-hidden">
+                                    <div class="data-name">네온 헌터</div>
+                                    <div class="data-desc">"어둠 속 데이터는 내 것이다."<br><br>네오 서울의 뒷골목을 지배하는 사이버 닌자.</div>
+                                </div>
+                            </div>
 
-        <!-- 윈도우 스타일: 세계관 -->
-        <div class="retro-window" id="worldview">
-             <div class="window-header">
-                <div class="title"><i class="fas fa-globe"></i> WORLD_INFO.TXT</div>
-                <div class="window-buttons">
-                    <div class="win-btn">?</div>
-                </div>
-            </div>
-            <div class="window-body" style="text-align: center;">
-                <p style="margin-bottom: 20px; color: #aaa;">Click the disk to load data...</p>
-                <div class="worldview-section">
-                    <div class="floppy-disk" onclick="openModal()">
-                        <i class="fas fa-save"></i>
+                            <!-- 캐릭터 2 -->
+                            <div class="char-card" onclick="showCharDetails(this)">
+                                <img src="https://placehold.co/400x250/002233/FFF?text=Doctor.gif" alt="Character 2" class="char-img">
+                                <div class="char-data-hidden">
+                                    <div class="data-name">닥터 픽셀</div>
+                                    <div class="data-desc">"고칠 수 없는 버그는 없어."<br><br>망가진 안드로이드를 수리하는 천재 메카닉.</div>
+                                </div>
+                            </div>
+
+                            <!-- 캐릭터 3 -->
+                            <div class="char-card" onclick="showCharDetails(this)">
+                                <img src="https://placehold.co/400x250/331100/FFF?text=Robot.gif" alt="Character 3" class="char-img">
+                                <div class="char-data-hidden">
+                                    <div class="data-name">V-3000</div>
+                                    <div class="data-desc">"감정... 로딩 중..."<br><br>인간의 감정을 배우고 있는 구형 AI 로봇.</div>
+                                </div>
+                            </div>
+
+                            <!-- 캐릭터 4 -->
+                            <div class="char-card" onclick="showCharDetails(this)">
+                                <img src="https://placehold.co/400x250/003300/FFF?text=Cat.gif" alt="Character 4" class="char-img">
+                                <div class="char-data-hidden">
+                                    <div class="data-name">사이버 캣</div>
+                                    <div class="data-desc">"Meow_System_Hacked"<br><br>네트워크를 자유롭게 넘나드는 해커 고양이.</div>
+                                </div>
+                            </div>
+
+                            <!-- 캐릭터 5 -->
+                            <div class="char-card" onclick="showCharDetails(this)">
+                                <img src="https://placehold.co/400x250/333333/FFF?text=Phantom.gif" alt="Character 5" class="char-img">
+                                <div class="char-data-hidden">
+                                    <div class="data-name">팬텀</div>
+                                    <div class="data-desc">"당신의 기억을 삽니다."<br><br>기억을 사고파는 의문의 정보상.</div>
+                                </div>
+                            </div>
+                            
+                            <!-- [이스터에그] 숨겨진 캐릭터 -->
+                            <div class="char-card" id="hidden-char" style="display: none;" onclick="showCharDetails(this)">
+                                <img src="https://placehold.co/400x250/550000/FFF?text=HIDDEN+No.6" alt="Hidden Character" class="char-img">
+                                <div class="char-data-hidden">
+                                    <div class="data-name" style="color:red;">프로젝트 X</div>
+                                    <div class="data-desc">"당신이 나를 찾았군..."<br><br>봉인된 금단의 AI. 시스템의 깊은 곳에 잠들어 있었다.</div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
-            </div>
-        </div>
+            </section>
 
-        <!-- 윈도우 스타일: 광고 -->
-        <div class="retro-window" id="ads">
-            <div class="window-header">
-                <div class="title"><i class="fas fa-tv"></i> AD_PLAYER.EXE</div>
-                <div class="window-buttons">
-                    <div class="win-btn">X</div>
+            <!-- 윈도우 스타일: 세계관 -->
+            <section class="chapter">
+                <div class="retro-window" id="worldview">
+                     <div class="window-header">
+                        <div class="title"><i class="fas fa-globe"></i> WORLD_INFO.TXT</div>
+                        <div class="window-buttons">
+                            <div class="win-btn">?</div>
+                        </div>
+                    </div>
+                    <div class="window-body" style="text-align: center;">
+                        <p style="margin-bottom: 20px; color: #aaa;">Click the disk to load data...</p>
+                        <div class="worldview-section">
+                            <div class="floppy-disk" onclick="openLoreModal()">
+                                <i class="fas fa-save"></i>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-            </div>
-            <div class="window-body">
-                <div class="video-wrapper">
-                    <iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ" title="YouTube video player" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-                </div>
-                <p style="text-align: center; color: var(--neon-yellow); margin-top: 10px; font-size: 0.8rem;">[SYSTEM] Playing sponsored content...</p>
-            </div>
-        </div>
+            </section>
 
-        <!-- 윈도우 스타일: 컨택트 -->
-        <div class="retro-window" id="contact">
-            <div class="window-header">
-                <div class="title"><i class="fas fa-address-book"></i> CONTACT_US</div>
-            </div>
-            <div class="window-body" style="background: #ccc; color: black;"> <!-- 여긴 밝은 배경 -->
-                <div class="contact-container">
-                    <a href="https://instagram.com" target="_blank" class="retro-btn">
-                        <i class="fab fa-instagram"></i> Instagram
-                    </a>
-                    <a href="mailto:email@example.com" class="retro-btn">
-                        <i class="fas fa-envelope"></i> Send Email
-                    </a>
+            <!-- 윈도우 스타일: 광고 -->
+            <section class="chapter">
+                <div class="retro-window" id="ads">
+                    <div class="window-header">
+                        <div class="title"><i class="fas fa-tv"></i> AD_PLAYER.EXE</div>
+                        <div class="window-buttons">
+                            <div class="win-btn">X</div>
+                        </div>
+                    </div>
+                    <div class="window-body">
+                        <div class="video-wrapper">
+                            <iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ" title="YouTube video player" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                        </div>
+                        <p style="text-align: center; color: var(--neon-yellow); margin-top: 10px; font-size: 0.8rem;">[SYSTEM] Playing sponsored content...</p>
+                    </div>
                 </div>
-            </div>
+            </section>
+
+            <!-- 윈도우 스타일: 컨택트 -->
+            <section class="chapter">
+                <div class="retro-window" id="contact">
+                    <div class="window-header">
+                        <div class="title"><i class="fas fa-address-book"></i> CONTACT_US</div>
+                    </div>
+                    <div class="window-body" style="background: #ccc; color: black;"> <!-- 여긴 밝은 배경 -->
+                        <div class="contact-container">
+                            <a href="https://instagram.com" target="_blank" class="retro-btn">
+                                <i class="fab fa-instagram"></i> Instagram
+                            </a>
+                            <a href="mailto:email@example.com" class="retro-btn">
+                                <i class="fas fa-envelope"></i> Send Email
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </section>
         </div>
     </div>
 
-    <!-- 레트로 스타일 모달 -->
+    <!-- [세계관 모달] -->
     <div id="lore-modal" class="modal-overlay">
         <div class="modal-window">
             <div class="modal-header">
                 <span id="modal-title">SYSTEM MESSAGE</span>
-                <span style="cursor:pointer;" onclick="closeModal()">X</span>
+                <span style="cursor:pointer;" onclick="closeModal('lore-modal')">X</span>
             </div>
             <div class="modal-body">
                 <div id="modal-icon" style="font-size: 3rem; color: #000080; margin-bottom: 10px;">
@@ -653,7 +681,24 @@
                     현실과 가상의 경계가 무너진 거대한 사이버펑크 도시입니다.<br>
                     이곳의 모든 데이터는 살아 숨쉬고 있습니다.
                 </p>
-                <button class="modal-close-btn" onclick="closeModal()">OK</button>
+                <button class="modal-close-btn" onclick="closeModal('lore-modal')">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- [캐릭터 상세 모달] -->
+    <div id="char-modal" class="modal-overlay">
+        <div class="modal-window">
+            <div class="modal-header">
+                <span>CHARACTER_PROFILE.EXE</span>
+                <span style="cursor:pointer;" onclick="closeModal('char-modal')">X</span>
+            </div>
+            <div class="modal-body">
+                <img id="char-modal-img" src="" alt="Character Detail">
+                <div id="char-modal-name"></div>
+                <div id="char-modal-desc"></div>
+                <br>
+                <button class="modal-close-btn" onclick="closeModal('char-modal')">CLOSE</button>
             </div>
         </div>
     </div>
@@ -661,20 +706,26 @@
     <script>
         function enterSite() {
             const intro = document.getElementById('intro-screen');
-            const main = document.getElementById('main-content');
+            const mainContentWrapper = document.getElementById('main-content-wrapper'); // 래퍼
+            const mainContent = document.getElementById('main-content'); // 내부 컨텐츠
             const bg = document.getElementById('background-layer');
 
-            intro.classList.add('hidden');
+            intro.classList.add('hidden'); 
             bg.classList.add('blurred');
 
             setTimeout(() => {
-                main.classList.add('visible');
                 intro.style.display = 'none';
+                mainContent.classList.add('visible'); // opacity 효과
             }, 800);
         }
 
-        // 모달 관련 함수 수정 (이스터에그 메시지 표시용)
-        function openModal(type = 'default') {
+        // --- 모달 공통 닫기 함수 ---
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+
+        // --- 세계관 모달 열기 ---
+        function openLoreModal(type = 'default') {
             const modal = document.getElementById('lore-modal');
             const title = document.getElementById('modal-title');
             const icon = document.getElementById('modal-icon');
@@ -689,47 +740,51 @@
                 header.style.color = 'red';
                 content.innerHTML = '숫자 6번의 비밀 코드가 입력되었습니다.<br>숨겨진 6번째 캐릭터 데이터가 복구되었습니다.';
             } else {
-                // 기본 세계관 내용 복구
                 title.innerText = 'SYSTEM MESSAGE';
                 icon.innerHTML = '<i class="fas fa-info-circle"></i>';
                 icon.style.color = '#000080';
                 header.innerText = '[ NEO SEOUL : 2077 ]';
-                header.style.color = 'white';
+                header.style.color = 'black';
                 content.innerHTML = '인류가 디지털 세상으로 완전히 이주한 시대.<br>현실과 가상의 경계가 무너진 거대한 사이버펑크 도시입니다.<br>이곳의 모든 데이터는 살아 숨쉬고 있습니다.';
             }
 
             modal.style.display = 'flex';
         }
 
-        function closeModal() {
-            document.getElementById('lore-modal').style.display = 'none';
+        // --- 캐릭터 상세 모달 열기 ---
+        function showCharDetails(cardElement) {
+            const imgSrc = cardElement.querySelector('.char-img').src;
+            const name = cardElement.querySelector('.data-name').innerHTML;
+            const desc = cardElement.querySelector('.data-desc').innerHTML;
+
+            document.getElementById('char-modal-img').src = imgSrc;
+            document.getElementById('char-modal-name').innerHTML = name;
+            document.getElementById('char-modal-desc').innerHTML = desc;
+
+            document.getElementById('char-modal').style.display = 'flex';
         }
 
+        // 배경 클릭 시 모달 닫기
         window.onclick = function(event) {
-            const modal = document.getElementById('lore-modal');
-            if (event.target == modal) {
-                modal.style.display = 'none';
+            if (event.target.classList.contains('modal-overlay')) {
+                event.target.style.display = 'none';
             }
         }
 
-        // --- 이스터에그: 숫자 '6' 5번 연속 입력 로직 ---
+        // --- 이스터에그 ---
         let pressCount = 0;
 
         document.addEventListener('keydown', (e) => {
-            // 숫자키 6 또는 텐키패드 6
             if (e.key === '6') {
                 pressCount++;
                 if (pressCount >= 5) {
                     const hiddenChar = document.getElementById('hidden-char');
-                    // 아직 안 보여줬다면 보여주기
                     if (hiddenChar.style.display === 'none') {
-                        hiddenChar.style.display = 'block'; // 캐릭터 표시
-                        openModal('found'); // 알림창 띄우기
+                        hiddenChar.style.display = 'block';
+                        openLoreModal('found');
                     }
-                    // 이미 보여줬다면 카운트만 유지하거나 리셋하지 않음 (중복 실행 방지)
                 }
             } else {
-                // 다른 키를 누르면 카운트 초기화 (연속 입력 조건)
                 pressCount = 0; 
             }
         });
