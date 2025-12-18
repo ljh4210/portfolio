@@ -3,10 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My AI Character World</title>
-    <!-- 픽셀 폰트 (둥근모꼴) 불러오기 -->
+    <title>My AI Character World & Works</title>
     <link href="https://cdn.jsdelivr.net/gh/ungyeolee/Font-DungGeunMo/dunggeunmo.css" rel="stylesheet">
-    <!-- 아이콘 폰트 (Font Awesome) -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
@@ -33,7 +31,6 @@
             height: 100%;
             overflow-y: scroll; /* 세로 스크롤 허용 */
             scroll-snap-type: y mandatory; /* 세로 방향 강제 스냅 */
-            /* scroll-behavior: smooth;  <-- 제거함 (스냅과 충돌하여 끊김 유발) */
         }
 
         * {
@@ -56,7 +53,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background-image: url('BG.png');
+            background-image: url('bg2.gif'); /* 배경 이미지 경로 확인 필요 */
             background-size: cover;
             background-position: center;
             z-index: -2;
@@ -272,7 +269,7 @@
         /* --- 캐릭터 섹션 --- */
         .character-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); /* 카드가 조금 더 작게 보이도록 조정 */
+            grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
             gap: 15px;
         }
 
@@ -305,29 +302,91 @@
             display: none; 
         }
 
-        /* --- 세계관 --- */
-        .worldview-section {
+        /* --- [NEW] 작업물 아카이브 스타일 --- */
+        .works-scroll-container {
+            max-height: 55vh; /* 윈도우 크기 제한 */
+            overflow-y: auto; /* 내부 스크롤 허용 */
+            padding-right: 10px;
+        }
+
+        /* 레트로 스크롤바 커스텀 */
+        .works-scroll-container::-webkit-scrollbar {
+            width: 12px;
+            background: #222;
+        }
+        .works-scroll-container::-webkit-scrollbar-thumb {
+            background: #c0c0c0;
+            border: 2px solid #fff;
+            border-right-color: #555;
+            border-bottom-color: #555;
+        }
+
+        .works-section-title {
+            color: var(--neon-yellow);
+            border-bottom: 2px dashed #555;
+            padding-bottom: 5px;
+            margin: 25px 0 15px 0;
+            text-align: left;
+            font-size: 1.2rem;
             display: flex;
-            justify-content: center;
-            margin: 20px 0;
+            align-items: center;
+            gap: 10px;
+        }
+        .works-section-title:first-child { margin-top: 0; }
+
+        .works-grid {
+            display: grid;
+            gap: 15px;
         }
 
-        .floppy-disk {
-            font-size: 4rem;
-            color: var(--neon-pink);
-            cursor: pointer;
-            animation: bounce 2s infinite ease-in-out;
-            text-shadow: 3px 3px 0px #fff;
-            transition: transform 0.2s;
+        /* 비디오 그리드: 2열 */
+        .video-grid {
+            grid-template-columns: repeat(2, 1fr);
         }
 
-        .floppy-disk:hover {
-            transform: scale(1.1) rotate(5deg);
+        /* 이미지 그리드: 3열 */
+        .image-grid {
+            grid-template-columns: repeat(3, 1fr);
         }
 
-        @keyframes bounce {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-10px); }
+        .work-item {
+            border: 2px solid #555;
+            background: #000;
+            transition: border-color 0.2s, transform 0.2s;
+            position: relative;
+        }
+
+        .work-item:hover {
+            border-color: var(--neon-blue);
+            transform: scale(1.02);
+            z-index: 5;
+            box-shadow: 0 0 10px rgba(0, 243, 255, 0.3);
+        }
+
+        /* iframe 비율 유지 wrapper */
+        .work-video-wrap {
+            position: relative;
+            padding-bottom: 56.25%; /* 16:9 비율 */
+            height: 0;
+            overflow: hidden;
+            background: #111;
+        }
+        .work-video-wrap iframe {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            border: none;
+        }
+
+        .work-img-wrap {
+            height: 150px;
+            overflow: hidden;
+        }
+        .work-img-wrap img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
         }
 
         /* --- 광고 섹션 --- */
@@ -474,9 +533,12 @@
         @media (max-width: 768px) {
             h1 { font-size: 2.5rem; }
             .character-grid { grid-template-columns: 1fr; }
+            /* [NEW] 모바일에서 비디오/이미지 그리드를 1열로 변경 */
+            .video-grid { grid-template-columns: 1fr; }
+            .image-grid { grid-template-columns: repeat(2, 1fr); }
+            
             .contact-container { flex-direction: column; align-items: stretch; }
             .retro-btn { justify-content: center; }
-            /* 모바일에서 내용이 넘칠 경우 스냅 높이 조정 */
             .chapter { height: auto; min-height: 100vh; padding: 40px 20px; }
         }
 
@@ -484,11 +546,9 @@
 </head>
 <body>
 
-    <!-- 1. 배경 및 효과 레이어 -->
     <div id="background-layer"></div>
     <div id="crt-overlay"></div>
 
-    <!-- 2. 인트로 화면 -->
     <div id="intro-screen">
         <div style="text-align: center;">
             <button class="power-btn" onclick="enterSite()">
@@ -498,19 +558,15 @@
         </div>
     </div>
 
-    <!-- 3. 메인 콘텐츠 (여기에 스냅 컨테이너 적용) -->
-    <!-- body 스크롤을 막고 이 div 내부에서 스크롤하게 함 -->
     <div class="snap-container" id="main-content-wrapper">
         <div id="main-content">
             
-            <!-- 타이틀 섹션 -->
             <section class="chapter title-chapter">
-                <h1>NEO PORTFOLIO</h1>
+                <h1>PORTFOLIO</h1>
                 <p style="text-align: center; color: #aaa; margin-top: -40px; margin-bottom: 40px;">Scroll Down to Access Data</p>
                 <i class="fas fa-chevron-down" style="color:white; font-size: 2rem; animation: bounce 1.5s infinite;"></i>
             </section>
 
-            <!-- 윈도우 스타일: 자기소개 -->
             <section class="chapter">
                 <div class="retro-window" id="about">
                     <div class="window-header">
@@ -523,19 +579,18 @@
                     </div>
                     <div class="window-body">
                         <div class="about-content">
-                            <img src="https://placehold.co/150x150/ff0099/FFF?text=ME" alt="Profile Picture" class="about-profile">
+                            <img src="7.jpg" alt="Profile Picture" class="about-profile">
                             <div class="about-text">
-                                <p>> 접속자: UNKNOWN_USER<br>
-                                > 직업: Digital Creator<br>
+                                <p>> 접속자: Lee Juheon<br>
+                                >Digital Creator<br>
                                 -------------------------<br>
-                                안녕하세요. 이곳은 픽셀과 데이터로 이루어진 저만의 가상 공간입니다. AI 기술을 활용해 새로운 사이버펑크 세계를 구축하고 있습니다.</p>
+                                안녕하세요 그래픽 디자이너 이주헌입니다.</p>
                             </div>
                         </div>
                     </div>
                 </div>
             </section>
 
-            <!-- 윈도우 스타일: 캐릭터 -->
             <section class="chapter">
                 <div class="retro-window" id="characters">
                     <div class="window-header">
@@ -547,52 +602,46 @@
                     <div class="window-body">
                         <div class="character-grid">
                             
-                            <!-- 캐릭터 1 -->
                             <div class="char-card" onclick="showCharDetails(this)">
                                 <img src="bada.gif" alt="Character 1" class="char-img">
                                 <div class="char-data-hidden">
                                     <div class="data-name">바다</div>
-                                    <div class="data-desc">"안녕! 이름이 뭐야?"<br><br>네오 서울의 뒷골목을 지배하는 사이버 닌자.</div>
+                                    <div class="data-desc">"안녕! 이름이 뭐야?"<br><br></div>
                                 </div>
                             </div>
 
-                            <!-- 캐릭터 2 -->
                             <div class="char-card" onclick="showCharDetails(this)">
                                 <img src="uju.gif" alt="Character 2" class="char-img">
                                 <div class="char-data-hidden">
                                     <div class="data-name">우주</div>
-                                    <div class="data-desc">"...안녕."<br><br>망가진 안드로이드를 수리하는 천재 메카닉.</div>
+                                    <div class="data-desc">"...안녕."<br><br></div>
                                 </div>
                             </div>
 
-                            <!-- 캐릭터 3 -->
                             <div class="char-card" onclick="showCharDetails(this)">
                                 <img src="live.gif" alt="Character 3" class="char-img">
                                 <div class="char-data-hidden">
                                     <div class="data-name">리브</div>
-                                    <div class="data-desc">"하하! 이것 좀 보라고!"<br><br>인간의 감정을 배우고 있는 구형 AI 로봇.</div>
+                                    <div class="data-desc">"하하! 이것 좀 보라고!"<br><br></div>
                                 </div>
                             </div>
 
-                            <!-- 캐릭터 4 -->
                             <div class="char-card" onclick="showCharDetails(this)">
                                 <img src="eco.gif" alt="Character 4" class="char-img">
                                 <div class="char-data-hidden">
                                     <div class="data-name">에코</div>
-                                    <div class="data-desc">"괜..괜찮으세요?..."<br><br>네트워크를 자유롭게 넘나드는 해커 고양이.</div>
+                                    <div class="data-desc">"괜찮으세요?..."<br><br></div>
                                 </div>
                             </div>
 
-                            <!-- 캐릭터 5 -->
                             <div class="char-card" onclick="showCharDetails(this)">
                                 <img src="ordo.gif" alt="Character 5" class="char-img">
                                 <div class="char-data-hidden">
                                     <div class="data-name">오르도</div>
-                                    <div class="data-desc">"반가워."<br><br>기억을 사고파는 의문의 정보상.</div>
+                                    <div class="data-desc">"반가워."<br><br></div>
                                 </div>
                             </div>
                             
-                            <!-- [이스터에그] 숨겨진 캐릭터 -->
                             <div class="char-card" id="hidden-char" style="display: none;" onclick="showCharDetails(this)">
                                 <img src="https://placehold.co/400x250/550000/FFF?text=HIDDEN+No.6" alt="Hidden Character" class="char-img">
                                 <div class="char-data-hidden">
@@ -605,27 +654,97 @@
                 </div>
             </section>
 
-            <!-- 윈도우 스타일: 세계관 -->
             <section class="chapter">
-                <div class="retro-window" id="worldview">
-                     <div class="window-header">
-                        <div class="title"><i class="fas fa-globe"></i> WORLD_INFO.TXT</div>
+                <div class="retro-window" id="my-works">
+                    <div class="window-header">
+                        <div class="title"><i class="fas fa-folder-open"></i> WORKS_ARCHIVE.ZIP</div>
                         <div class="window-buttons">
-                            <div class="win-btn">?</div>
+                            <div class="win-btn">_</div>
+                            <div class="win-btn">□</div>
+                            <div class="win-btn">X</div>
                         </div>
                     </div>
-                    <div class="window-body" style="text-align: center;">
-                        <p style="margin-bottom: 20px; color: #aaa;">Click the disk to load data...</p>
-                        <div class="worldview-section">
-                            <div class="floppy-disk" onclick="openLoreModal()">
-                                <i class="fas fa-save"></i>
+                    <div class="window-body">
+                        <div class="works-scroll-container">
+                            
+                            <div class="works-section-title">
+                                <i class="fab fa-youtube"></i> VIDEO_LOGS
                             </div>
+                            <div class="works-grid video-grid">
+                                <div class="work-item">
+                                    <div class="work-video-wrap">
+                                        <iframe src="https://youtu.be/NS2CZDGEe6s?origin=http://127.0.0.1:5500" title="Work 1" allowfullscreen></iframe>
+                                    </div>
+                                </div>
+                                <div class="work-item">
+                                    <div class="work-video-wrap">
+                                        <iframe src="https://youtu.be/pvlWV5aGZiw?origin=http://127.0.0.1:5500" title="Work 2" allowfullscreen></iframe>
+                                    </div>
+                                </div>
+                                <div class="work-item">
+                                    <div class="work-video-wrap">
+                                        <iframe src="https://www.youtube.com/embed/pvlWV5aGZiw" title="Work 3" allowfullscreen></iframe>
+                                    </div>
+                                </div>
+                                <div class="work-item">
+                                    <div class="work-video-wrap">
+                                        <iframe src="https://www.youtube.com/embed/pvlWV5aGZiw" title="Work 4" allowfullscreen></iframe>
+                                    </div>
+                                </div>
+                                <div class="work-item">
+                                    <div class="work-video-wrap">
+                                        <iframe src="https://www.youtube.com/embed/pvlWV5aGZiw" title="Work 5" allowfullscreen></iframe>
+                                    </div>
+                                </div>
+                                <div class="work-item">
+                                    <div class="work-video-wrap">
+                                        <iframe src="https://www.youtube.com/embed/pvlWV5aGZiw" title="Work 6" allowfullscreen></iframe>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="works-section-title">
+                                <i class="fas fa-images"></i> GRAPHIC_FILES
+                            </div>
+                            <div class="works-grid image-grid">
+                                <div class="work-item">
+                                    <div class="work-img-wrap">
+                                        <img src="1.png" alt="Artwork 1" class="work-img">
+                                    </div>
+                                </div>
+                                <div class="work-item">
+                                    <div class="work-img-wrap">
+                                        <img src="2.jpg" alt="Artwork 2" class="work-img">
+                                    </div>
+                                </div>
+                                <div class="work-item">
+                                    <div class="work-img-wrap">
+                                        <img src="3.jpg" alt="Artwork 3" class="work-img">
+                                    </div>
+                                </div>
+                                <div class="work-item">
+                                    <div class="work-img-wrap">
+                                        <img src="4.png" alt="Artwork 4" class="work-img">
+                                    </div>
+                                </div>
+                                <div class="work-item">
+                                    <div class="work-img-wrap">
+                                        <img src="5.png" alt="Artwork 5" class="work-img">
+                                    </div>
+                                </div>
+                                <div class="work-item">
+                                    <div class="work-img-wrap">
+                                        <img src="6.png" alt="Artwork 6" class="work-img">
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <p style="text-align:center; color:#555; margin-top:20px;">[END OF ARCHIVE]</p>
                         </div>
                     </div>
                 </div>
             </section>
 
-            <!-- 윈도우 스타일: 광고 -->
             <section class="chapter">
                 <div class="retro-window" id="ads">
                     <div class="window-header">
@@ -636,25 +755,23 @@
                     </div>
                     <div class="window-body">
                         <div class="video-wrapper">
-                            <iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ" title="YouTube video player" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                            <iframe src="https://youtu.be/pvlWV5aGZiw" title="YouTube video player" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
                         </div>
                         <p style="text-align: center; color: var(--neon-yellow); margin-top: 10px; font-size: 0.8rem;">[SYSTEM] Playing sponsored content...</p>
                     </div>
                 </div>
             </section>
 
-            <!-- 윈도우 스타일: 컨택트 -->
             <section class="chapter">
                 <div class="retro-window" id="contact">
                     <div class="window-header">
                         <div class="title"><i class="fas fa-address-book"></i> CONTACT_US</div>
                     </div>
-                    <div class="window-body" style="background: #ccc; color: black;"> <!-- 여긴 밝은 배경 -->
-                        <div class="contact-container">
+                    <div class="window-body" style="background: #ccc; color: black;"> <div class="contact-container">
                             <a href="https://instagram.com" target="_blank" class="retro-btn">
                                 <i class="fab fa-instagram"></i> Instagram
                             </a>
-                            <a href="mailto:email@example.com" class="retro-btn">
+                            <a href="mailto:ekfls14144@gmail.com" class="retro-btn">
                                 <i class="fas fa-envelope"></i> Send Email
                             </a>
                         </div>
@@ -664,29 +781,6 @@
         </div>
     </div>
 
-    <!-- [세계관 모달] -->
-    <div id="lore-modal" class="modal-overlay">
-        <div class="modal-window">
-            <div class="modal-header">
-                <span id="modal-title">SYSTEM MESSAGE</span>
-                <span style="cursor:pointer;" onclick="closeModal('lore-modal')">X</span>
-            </div>
-            <div class="modal-body">
-                <div id="modal-icon" style="font-size: 3rem; color: #000080; margin-bottom: 10px;">
-                    <i class="fas fa-info-circle"></i>
-                </div>
-                <h3 id="modal-header-text" style="margin-bottom: 15px;">[ NEO SEOUL : 2077 ]</h3>
-                <p id="modal-content-text" class="modal-text">
-                    인류가 디지털 세상으로 완전히 이주한 시대.<br>
-                    현실과 가상의 경계가 무너진 거대한 사이버펑크 도시입니다.<br>
-                    이곳의 모든 데이터는 살아 숨쉬고 있습니다.
-                </p>
-                <button class="modal-close-btn" onclick="closeModal('lore-modal')">OK</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- [캐릭터 상세 모달] -->
     <div id="char-modal" class="modal-overlay">
         <div class="modal-window">
             <div class="modal-header">
@@ -702,12 +796,28 @@
             </div>
         </div>
     </div>
+    
+    <div id="lore-modal" class="modal-overlay">
+        <div class="modal-window">
+             <div class="modal-header">
+                <span id="modal-title">SYSTEM MESSAGE</span>
+                <span style="cursor:pointer;" onclick="closeModal('lore-modal')">X</span>
+            </div>
+            <div class="modal-body">
+                <div id="modal-icon" style="font-size: 3rem; margin-bottom: 10px;"></div>
+                <h2 id="modal-header-text"></h2>
+                <p id="modal-content-text"></p>
+                <br>
+                <button class="modal-close-btn" onclick="closeModal('lore-modal')">OK</button>
+            </div>
+        </div>
+    </div>
 
     <script>
         function enterSite() {
             const intro = document.getElementById('intro-screen');
-            const mainContentWrapper = document.getElementById('main-content-wrapper'); // 래퍼
-            const mainContent = document.getElementById('main-content'); // 내부 컨텐츠
+            const mainContentWrapper = document.getElementById('main-content-wrapper'); 
+            const mainContent = document.getElementById('main-content');
             const bg = document.getElementById('background-layer');
 
             intro.classList.add('hidden'); 
@@ -715,7 +825,7 @@
 
             setTimeout(() => {
                 intro.style.display = 'none';
-                mainContent.classList.add('visible'); // opacity 효과
+                mainContent.classList.add('visible'); 
             }, 800);
         }
 
